@@ -1,3 +1,4 @@
+import 'main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -18,20 +19,22 @@ class _LoginPageState extends State<LoginPage> {
       return null;
     }
 
-    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
 
     final AuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
-    final UserCredential userCredential = await _auth.signInWithCredential(credential);
+    final UserCredential userCredential =
+        await _auth.signInWithCredential(credential);
     return userCredential.user;
   }
 
-  void _signOut() {
-    _auth.signOut();
-    _googleSignIn.signOut();
+  void _signOut() async { // Added async to handle sign-out correctly
+    await _auth.signOut();
+    await _googleSignIn.signOut();
   }
 
   @override
@@ -48,9 +51,11 @@ class _LoginPageState extends State<LoginPage> {
               onPressed: () async {
                 User? user = await _signInWithGoogle();
                 if (user != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Signed in as ${user.displayName}'),
-                  ));
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => MyHomePage(), // Ensure MyHomePage is defined
+                    ),
+                  );
                 }
               },
               child: Text('Sign in with Google'),

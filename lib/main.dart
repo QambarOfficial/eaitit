@@ -9,9 +9,10 @@ import 'search_screen.dart';
 import 'loginPage.dart';
 
 void main() async {
-//   await Firebase.initializeApp(
-//     options: DefaultFirebaseOptions.currentPlatform,
-// );
+    WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    // options: DefaultFirebaseOptions.currentPlatform,
+);
   runApp(const MyApp());
 }
 
