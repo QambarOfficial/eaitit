@@ -1,4 +1,5 @@
 app-debug.apk
-*.apk
+.apk
 build/app/outputs/apk/debug/app-debug.apk
-build/app/outputs/*
+build/app/outputs/
+build/
