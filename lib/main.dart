@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:what_to_eat/chat_screen.dart';
 // ignore: unused_import
-import 'profilePage.dart';
-import 'package:what_to_eat/search_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 // import 'firebase_options.dart';
 
+import 'chat_screen.dart';
+import 'profilePage.dart';
+import 'search_screen.dart';
 import 'loginPage.dart';
 
 void main() async {
