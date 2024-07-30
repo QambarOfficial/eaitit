@@ -1,7 +1,8 @@
-import 'main.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'myHomePage.dart'; 
+// import 'main.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -33,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     return userCredential.user;
   }
 
-  void _signOut() async { // Added async to handle sign-out correctly
+  void _signOut() async {
     await _auth.signOut();
     await _googleSignIn.signOut();
   }
@@ -42,7 +43,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Google Login and Signup'),
+        title: const Text('Google Login and Signup'),
       ),
       body: Center(
         child: Column(
@@ -54,16 +55,16 @@ class _LoginPageState extends State<LoginPage> {
                 if (user != null) {
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                      builder: (context) => MyHomePage(), // Ensure MyHomePage is defined
+                      builder: (context) => MyHomePage(user: user), // Pass user to MyHomePage
                     ),
                   );
                 }
               },
-              child: Text('Sign in with Google'),
+              child: const Text('Sign in with Google'),
             ),
             ElevatedButton(
               onPressed: _signOut,
-              child: Text('Sign out'),
+              child: const Text('Sign out'),
             ),
           ],
         ),
