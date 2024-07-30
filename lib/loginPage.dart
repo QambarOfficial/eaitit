@@ -15,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<User?> _signInWithGoogle() async {
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
     if (googleUser == null) {
+      print("user was returned as Null");
       // The user canceled the sign-in
       return null;
     }

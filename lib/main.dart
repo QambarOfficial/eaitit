@@ -9,10 +9,13 @@ import 'search_screen.dart';
 import 'loginPage.dart';
 
 void main() async {
-    WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    // options: DefaultFirebaseOptions.currentPlatform,
-);
+      options: const FirebaseOptions(
+          apiKey: "AIzaSyClNt-wD3h2hH7-d9Z8VvOy8LUDneJMKXY",
+          appId: "1:861621886960:android:331326c53ce6741fb7c735",
+          messagingSenderId: "861621886960",
+          projectId: "eatit-f68fb"));
   runApp(const MyApp());
 }
 
