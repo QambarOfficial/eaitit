@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Ensure this import is correct
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:googleapis/people/v1.dart' as people_api;
 import 'package:googleapis_auth/googleapis_auth.dart' as auth;
 import 'package:http/http.dart' as http;
@@ -22,6 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   );
 
   late Future<List<Map<String, dynamic>>> _contactsFuture;
+  List<Map<String, dynamic>> _familyMembers = []; // List to store family members
 
   @override
   void initState() {
@@ -76,9 +77,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final photoUrl = contact.photos?.isNotEmpty == true ? contact.photos!.first.url : '';
         final phoneNumber = contact.phoneNumbers?.isNotEmpty == true ? contact.phoneNumbers!.first.value : 'No Phone Number';
 
-        // Debugging output
-        print('Contact: $name, Email: $email, Photo URL: $photoUrl, Phone: $phoneNumber');
-
         return {
           'name': name,
           'email': email,
@@ -122,6 +120,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _handleSignOut(context);
   }
 
+  void _addFamilyMember(Map<String, dynamic> contact) {
+    setState(() {
+      _familyMembers.add(contact);
+    });
+  }
+
+  void _removeFamilyMember(Map<String, dynamic> contact) {
+    setState(() {
+      _familyMembers.remove(contact);
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -135,52 +145,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: const Text('Profile'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => _signOut(context), // Use a function reference here
+          Builder(
+            builder: (BuildContext context) => IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openEndDrawer(); // Use Scaffold.of to open the end drawer
+              },
+            ),
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+
+      endDrawer: Drawer( // Changed from 'drawer' to 'endDrawer'
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              backgroundImage: NetworkImage(widget.user.photoURL ?? ''),
-              radius: 50,
+            AppBar(
+              title: const Text('Contacts'),
+              automaticallyImplyLeading: false,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: () => _signOut(context), // Logout option in the drawer
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Name: ${widget.user.displayName ?? 'No Name'}',
-              style: const TextStyle(fontSize: 20),
-            ),
-            Text(
-              'Email: ${widget.user.email ?? 'No Email'}',
-              style: const TextStyle(fontSize: 20),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Contacts:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: _contactsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No contacts found.'));
-                }
+            Expanded(
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: _contactsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('No contacts found.'));
+                  }
 
-                final contacts = snapshot.data!;
+                  final contacts = snapshot.data!;
 
-                return Expanded(
-                  child: ListView.builder(
-                    shrinkWrap: true,
+                  return ListView.builder(
                     itemCount: contacts.length,
                     itemBuilder: (context, index) {
                       final contact = contacts[index];
@@ -196,13 +199,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         title: Text(contact['name'] ?? 'No Name'),
                         subtitle: Text(contact['email'] ?? 'No Email'),
                         trailing: Text(contact['phoneNumber'] ?? 'No Phone Number'),
+                        onTap: () {
+                          _addFamilyMember(contact); // Add contact to family members
+                          Navigator.pop(context); // Close the drawer
+                        },
                       );
                     },
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ],
+        ),
+      ),
+      body: Builder(
+        builder: (context) => Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                backgroundImage: NetworkImage(widget.user.photoURL ?? ''),
+                radius: 50,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Name: ${widget.user.displayName ?? 'No Name'}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              Text(
+                'Email: ${widget.user.email ?? 'No Email'}',
+                style: const TextStyle(fontSize: 20),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Family Members:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _familyMembers.length,
+                  itemBuilder: (context, index) {
+                    final contact = _familyMembers[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: contact['photoUrl'] != ''
+                            ? NetworkImage(contact['photoUrl'])
+                            : null,
+                        child: contact['photoUrl'] == ''
+                            ? const Icon(Icons.person)
+                            : null,
+                      ),
+                      title: Text(contact['name'] ?? 'No Name'),
+                      subtitle: Text(contact['email'] ?? 'No Email'),
+                      trailing: Text(contact['phoneNumber'] ?? 'No Phone Number'),
+                      onLongPress: () => _removeFamilyMember(contact), // Long press to remove
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Scaffold.of(context).openEndDrawer(); // Open the end drawer
+                },
+                child: const Text('Add Member'),
+              ),
+            ],
+          ),
         ),
       ),
     );
