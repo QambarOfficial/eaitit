@@ -1,16 +1,4 @@
 # eatit
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Eatit is your ultimate kitchen companion, designed specifically for home chefs. 
+This intuitive app takes the guesswork out of meal planning, helping you decide what's for breakfast, lunch, and dinner with ease.
+Whether you're cooking for yourself, your family, or hosting a dinner party, Menu Maestro ensures every meal is a masterpiece.
