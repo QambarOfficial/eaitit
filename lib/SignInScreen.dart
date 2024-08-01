@@ -1,17 +1,20 @@
-// SignInScreen.dart
-import 'HomeNavigationBar.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'user_prefs.dart';
+
+import 'HomeNavigationBar.dart';
 
 class SignInScreen extends StatelessWidget {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   SignInScreen({super.key});
 
   Future<void> _signInWithGoogle(BuildContext context) async {
     try {
+      // Sign in with Google
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser != null) {
         final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
@@ -20,19 +23,23 @@ class SignInScreen extends StatelessWidget {
           idToken: googleAuth.idToken,
         );
 
-        final UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+        final UserCredential userCredential = await _auth.signInWithCredential(credential);
         final User? user = userCredential.user;
 
         if (user != null) {
-          // Save user details using UserPrefs
-          await UserPrefs.saveUser(
-            user.uid,
-            user.email ?? '',
-            user.displayName ?? '',
-            user.photoURL ?? '',
-          );
+          // Get user details
+          final String email = user.email ?? 'No email';
+          final String displayName = user.displayName ?? 'No username';
+          final String photoURL = user.photoURL ?? 'No photo URL';
 
-          // Navigate to HomeNavigationBar with the authenticated user
+          // Save user details to Firestore
+          await _firestore.collection('family').doc(user.uid).set({
+            'email': email,
+            'username': displayName,
+            'photoURL': photoURL,
+          });
+
+          // Navigate to the next screen
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomeNavigationBar(user: user)),
