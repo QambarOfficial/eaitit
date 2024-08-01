@@ -1,0 +1,57 @@
+# Flutter specific
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter-versions
+.packages
+.dart_tool/
+
+# Build outputs
+/build/
+
+# iOS specific
+.generated/
+ios/Flutter/.last_build_id
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/App.framework/
+ios/Flutter/Flutter.framework/
+ios/ServiceDefinitions.json
+ios/Runner.xcworkspace/
+ios/Flutter/flutter_export_environment.sh
+
+# Android specific
+.gradle/
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+android/local.properties
+
+# Package files
+*.lock
+pubspec.lock
+
+# User-specific files
+*.swp
+.idea/
+.vscode/
+.metadata
+
+# Environment variables
+.env
+
+# Generated files
+*.log
+*.tmp
+
+# macOS specific
+.DS_Store
+
+# Large files
+build/app/outputs/apk/debug/app-debug.apk
+
+# Miscellaneous
+.project
+.classpath
+.cproject
+.settings/
+.externs/
