@@ -8,6 +8,8 @@ import 'user_prefs.dart';
 class SignInScreen extends StatelessWidget {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
+  SignInScreen({super.key});
+
   Future<void> _signInWithGoogle(BuildContext context) async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
