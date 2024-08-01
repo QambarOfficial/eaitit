@@ -22,7 +22,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   );
 
   late Future<List<Map<String, dynamic>>> _contactsFuture;
-  List<Map<String, dynamic>> _familyMembers = []; // List to store family members
+  List<Map<String, dynamic>> _familyMembers = [];
+  List<Map<String, dynamic>> _filteredContacts = [];
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -32,24 +34,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<List<Map<String, dynamic>>> _fetchContacts() async {
     try {
-      GoogleSignInAccount? googleUser = _googleSignIn.currentUser;
+      GoogleSignInAccount? googleUser = _googleSignIn.currentUser ??
+          await _googleSignIn.signInSilently() ??
+          await _googleSignIn.signIn();
 
-      if (googleUser == null) {
-        googleUser = await _googleSignIn.signInSilently();
-        if (googleUser == null) {
-          googleUser = await _googleSignIn.signIn();
-          if (googleUser == null) {
-            throw Exception('User did not sign in with Google.');
-          }
-        }
-      }
+      if (googleUser == null) throw Exception('User did not sign in with Google.');
 
       final googleAuth = await googleUser.authentication;
       final accessToken = googleAuth.accessToken;
 
-      if (accessToken == null) {
-        throw Exception('Google access token is missing.');
-      }
+      if (accessToken == null) throw Exception('Google access token is missing.');
 
       final authClient = auth.authenticatedClient(
         http.Client(),
@@ -72,16 +66,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       final contacts = response.connections ?? [];
       return contacts.map((contact) {
-        final name = contact.names?.isNotEmpty == true ? contact.names!.first.displayName : 'No Name';
-        final email = contact.emailAddresses?.isNotEmpty == true ? contact.emailAddresses!.first.value : 'No Email';
-        final photoUrl = contact.photos?.isNotEmpty == true ? contact.photos!.first.url : '';
-        final phoneNumber = contact.phoneNumbers?.isNotEmpty == true ? contact.phoneNumbers!.first.value : 'No Phone Number';
-
         return {
-          'name': name,
-          'email': email,
-          'photoUrl': photoUrl,
-          'phoneNumber': phoneNumber,
+          'name': contact.names?.first.displayName ?? 'No Name',
+          'email': contact.emailAddresses?.first.value ?? 'No Email',
+          'photoUrl': contact.photos?.first.url ?? '',
+          'phoneNumber': contact.phoneNumbers?.first.value ?? 'No Phone Number',
         };
       }).toList();
     } catch (e) {
@@ -92,33 +81,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _handleSignOut(BuildContext context) async {
     try {
-      // Sign out from Google
       await _googleSignIn.signOut();
-      print('Google sign-out successful');
-      
-      // Sign out from Firebase
       await FirebaseAuth.instance.signOut();
-      print('Firebase sign-out successful');
-      
-      // Clear saved user data
       await UserPrefs.clearUser();
-      print('UserPrefs cleared');
-      
-      // Navigate to the SignInScreen
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => SignInScreen()),
-      );
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignInScreen()));
     } catch (e) {
       print('Error signing out: $e');
-      // Optionally display an error message to the user
     }
   }
 
-  void _signOut(BuildContext context) {
-    // Call the async method but handle it within the void function
-    _handleSignOut(context);
-  }
+  void _signOut(BuildContext context) => _handleSignOut(context);
 
   void _addFamilyMember(Map<String, dynamic> contact) {
     setState(() {
@@ -132,10 +104,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  void _filterContacts(String query) {
+    setState(() {
+      _searchQuery = query.toLowerCase();
+      _contactsFuture.then((contacts) {
+        _filteredContacts = contacts.where((contact) {
+          final name = contact['name']?.toLowerCase() ?? '';
+          final email = contact['email']?.toLowerCase() ?? '';
+          return name.contains(_searchQuery) || email.contains(_searchQuery);
+        }).toList();
+      });
+    });
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Refetch contacts if needed when dependencies change
     _contactsFuture = _fetchContacts();
   }
 
@@ -145,18 +129,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: const Text('Profile'),
         actions: [
-          Builder(
-            builder: (BuildContext context) => IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openEndDrawer(); // Use Scaffold.of to open the end drawer
-              },
-            ),
+          IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openEndDrawer(),
           ),
         ],
       ),
-
-      endDrawer: Drawer( // Changed from 'drawer' to 'endDrawer'
+      endDrawer: Drawer(
         child: Column(
           children: [
             AppBar(
@@ -165,9 +144,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.logout),
-                  onPressed: () => _signOut(context), // Logout option in the drawer
+                  onPressed: () => _signOut(context),
                 ),
               ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                decoration: const InputDecoration(
+                  labelText: 'Search',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: _filterContacts,
+              ),
             ),
             Expanded(
               child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -181,7 +170,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     return const Center(child: Text('No contacts found.'));
                   }
 
-                  final contacts = snapshot.data!;
+                  final contacts = _searchQuery.isEmpty
+                      ? snapshot.data!
+                      : _filteredContacts;
 
                   return ListView.builder(
                     itemCount: contacts.length,
@@ -200,8 +191,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         subtitle: Text(contact['email'] ?? 'No Email'),
                         trailing: Text(contact['phoneNumber'] ?? 'No Phone Number'),
                         onTap: () {
-                          _addFamilyMember(contact); // Add contact to family members
-                          Navigator.pop(context); // Close the drawer
+                          _addFamilyMember(contact);
+                          Navigator.pop(context);
                         },
                       );
                     },
@@ -212,63 +203,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-      body: Builder(
-        builder: (context) => Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                backgroundImage: NetworkImage(widget.user.photoURL ?? ''),
-                radius: 50,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Name: ${widget.user.displayName ?? 'No Name'}',
-                style: const TextStyle(fontSize: 20),
-              ),
-              Text(
-                'Email: ${widget.user.email ?? 'No Email'}',
-                style: const TextStyle(fontSize: 20),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Family Members:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _familyMembers.length,
-                  itemBuilder: (context, index) {
-                    final contact = _familyMembers[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: contact['photoUrl'] != ''
-                            ? NetworkImage(contact['photoUrl'])
-                            : null,
-                        child: contact['photoUrl'] == ''
-                            ? const Icon(Icons.person)
-                            : null,
-                      ),
-                      title: Text(contact['name'] ?? 'No Name'),
-                      subtitle: Text(contact['email'] ?? 'No Email'),
-                      trailing: Text(contact['phoneNumber'] ?? 'No Phone Number'),
-                      onLongPress: () => _removeFamilyMember(contact), // Long press to remove
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  Scaffold.of(context).openEndDrawer(); // Open the end drawer
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              backgroundImage: NetworkImage(widget.user.photoURL ?? ''),
+              radius: 50,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Name: ${widget.user.displayName ?? 'No Name'}',
+              style: const TextStyle(fontSize: 20),
+            ),
+            Text(
+              'Email: ${widget.user.email ?? 'No Email'}',
+              style: const TextStyle(fontSize: 20),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Family Members:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _familyMembers.length,
+                itemBuilder: (context, index) {
+                  final contact = _familyMembers[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: contact['photoUrl'] != ''
+                          ? NetworkImage(contact['photoUrl'])
+                          : null,
+                      child: contact['photoUrl'] == ''
+                          ? const Icon(Icons.person)
+                          : null,
+                    ),
+                    title: Text(contact['name'] ?? 'No Name'),
+                    subtitle: Text(contact['email'] ?? 'No Email'),
+                    trailing: Text(contact['phoneNumber'] ?? 'No Phone Number'),
+                    onLongPress: () => _removeFamilyMember(contact),
+                  );
                 },
-                child: const Text('Add Member'),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => Scaffold.of(context).openEndDrawer(),
+              child: const Text('Add Member'),
+            ),
+          ],
         ),
       ),
     );
