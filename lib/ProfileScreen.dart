@@ -26,6 +26,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<Map<String, dynamic>> _filteredContacts = [];
   String _searchQuery = '';
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>(); // Added key
+
   @override
   void initState() {
     super.initState();
@@ -126,12 +128,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey, // Added key here
       appBar: AppBar(
         title: const Text('Profile'),
         actions: [
           IconButton(
             icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openEndDrawer(),
+            onPressed: () {
+              // Using the GlobalKey to open the end drawer
+              _scaffoldKey.currentState?.openEndDrawer(); // Updated
+            },
           ),
         ],
       ),
@@ -251,7 +257,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => Scaffold.of(context).openEndDrawer(),
+              onPressed: () {
+                // Using the GlobalKey to open the end drawer
+                _scaffoldKey.currentState?.openEndDrawer(); // Updated
+              },
               child: const Text('Add Member'),
             ),
           ],

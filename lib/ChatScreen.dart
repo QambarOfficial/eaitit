@@ -1,49 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Group Chat App',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: Colors.black,
-        hintColor: Colors.white,
-        scaffoldBackgroundColor: Colors.black,
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.white),
-          bodyMedium: TextStyle(color: Colors.white),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          hintStyle: const TextStyle(color: Colors.white54),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30.0),
-            borderSide: const BorderSide(color: Colors.white54),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30.0),
-            borderSide: const BorderSide(color: Colors.white54),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30.0),
-            borderSide: const BorderSide(color: Colors.white),
-          ),
-        ),
-      ),
-      home: ChatScreen(selectedMenu: 'Group Chat'),
-    );
-  }
-}
-
 class ChatScreen extends StatefulWidget {
   final String selectedMenu;
 
-  ChatScreen({required this.selectedMenu});
+  const ChatScreen({super.key, required this.selectedMenu});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -99,7 +60,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.selectedMenu),
-        backgroundColor: Colors.grey[900],
+        backgroundColor: Colors.black,
       ),
       body: SafeArea(
         child: Column(
@@ -108,7 +69,8 @@ class _ChatScreenState extends State<ChatScreen> {
             Expanded(
               child: ListView.builder(
                 reverse: true,
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10.0, vertical: 20.0),
                 itemCount: messages.length,
                 itemBuilder: (context, index) {
                   final message = messages[messages.length - 1 - index];
@@ -117,9 +79,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     text: message.text,
                     time: message.time,
                     profileImage: message.profileImage,
-                    isMe: message.sender == 'User3', // Replace with actual user logic
+                    isMe: message.sender ==
+                        'User3', // Replace with actual user logic
                     reactions: message.reactions,
-                    onReact: (reaction) => addReaction(messages.length - 1 - index, reaction),
+                    onReact: (reaction) =>
+                        addReaction(messages.length - 1 - index, reaction),
                   );
                 },
               ),
@@ -129,7 +93,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 10.0),
                 child: Text(
                   'User3 is typing...',
-                  style: TextStyle(color: Colors.white54),
+                  style: TextStyle(color: Colors.black),
                 ),
               ),
             Padding(
@@ -139,10 +103,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: messageTextController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         filled: true,
-                        fillColor: Colors.grey[800],
-                        hintText: 'Enter your message...',
+                        fillColor: Colors.black,
+                        hintText: 'Type your message here...',
+                        hintStyle: TextStyle(
+                          color:Colors.white,
+                        ),
                       ),
                       style: const TextStyle(color: Colors.white),
                       onChanged: (text) {
@@ -155,8 +122,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   const SizedBox(width: 8.0),
                   FloatingActionButton(
                     onPressed: sendMessage,
-                    child: const Icon(Icons.send, color: Colors.black),
-                    backgroundColor: Colors.white,
+                    backgroundColor: Colors.black,
+                    child: const Icon(Icons.send, color: Colors.white),
                   ),
                 ],
               ),
@@ -192,8 +159,9 @@ class MessageBubble extends StatelessWidget {
   final List<String> reactions;
   final Function(String) onReact;
 
-  MessageBubble(
-      {required this.sender,
+  const MessageBubble(
+      {super.key,
+      required this.sender,
       required this.text,
       required this.time,
       required this.profileImage,
@@ -207,10 +175,12 @@ class MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(10.0),
       child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment:
+            isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: <Widget>[
           Row(
-            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            mainAxisAlignment:
+                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: <Widget>[
               if (!isMe) ...[
                 CircleAvatar(
@@ -221,7 +191,8 @@ class MessageBubble extends StatelessWidget {
               ],
               Expanded(
                 child: Column(
-                  crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                   children: <Widget>[
                     Material(
                       borderRadius: isMe
@@ -234,11 +205,14 @@ class MessageBubble extends StatelessWidget {
                               bottomLeft: Radius.circular(30.0),
                               bottomRight: Radius.circular(30.0)),
                       elevation: 5.0,
-                      color: isMe ? Colors.grey[700] : Colors.grey[600],
+                      color: isMe ? Colors.grey[800] : Colors.black,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 20.0),
                         child: Column(
-                          crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          crossAxisAlignment: isMe
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
                               text,
@@ -273,17 +247,19 @@ class MessageBubble extends StatelessWidget {
           ),
           const SizedBox(height: 5.0),
           Row(
-            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            mainAxisAlignment:
+                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: <Widget>[
               ...reactions.map((reaction) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                child: Text(
-                  reaction,
-                  style: const TextStyle(color: Colors.white, fontSize: 18.0),
-                ),
-              )),
+                    padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                    child: Text(
+                      reaction,
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 18.0),
+                    ),
+                  )),
               IconButton(
-                icon: const Icon(Icons.emoji_emotions, color: Colors.white54),
+                icon: const Icon(Icons.emoji_emotions, color: Colors.black),
                 onPressed: () {
                   // This example only supports a single reaction
                   showDialog(
@@ -303,7 +279,7 @@ class MessageBubble extends StatelessWidget {
 class ReactionDialog extends StatelessWidget {
   final Function(String) onReact;
 
-  ReactionDialog({required this.onReact});
+  const ReactionDialog({super.key, required this.onReact});
 
   @override
   Widget build(BuildContext context) {
@@ -313,12 +289,12 @@ class ReactionDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           ...['😊', '👍', '❤️', '😂'].map((emoji) => IconButton(
-            icon: Text(emoji, style: const TextStyle(fontSize: 30)),
-            onPressed: () {
-              onReact(emoji);
-              Navigator.of(context).pop();
-            },
-          )),
+                icon: Text(emoji, style: const TextStyle(fontSize: 30)),
+                onPressed: () {
+                  onReact(emoji);
+                  Navigator.of(context).pop();
+                },
+              )),
         ],
       ),
     );
